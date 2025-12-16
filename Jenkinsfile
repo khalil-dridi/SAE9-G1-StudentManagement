@@ -15,5 +15,17 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
+
+        stage('Unit Tests') {
+            steps {
+                echo "Exécution des tests unitaires..."
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
     }
 }
