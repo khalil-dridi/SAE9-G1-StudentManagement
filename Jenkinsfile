@@ -46,15 +46,14 @@ pipeline {
                                                   passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker tag ${DOCKER_IMAGE} $DOCKER_USER/${IMAGE_NAME}:${BUILD_NUMBER}
                         docker tag ${DOCKER_IMAGE} $DOCKER_USER/${IMAGE_NAME}:latest
-                        docker push $DOCKER_USER/${IMAGE_NAME}:${BUILD_NUMBER}
                         docker push $DOCKER_USER/${IMAGE_NAME}:latest
                         docker logout
                     '''
                 }
             }
         }
+
 
         stage('Deploy Docker Compose') {
             steps {
