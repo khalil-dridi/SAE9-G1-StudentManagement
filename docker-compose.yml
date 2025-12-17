@@ -13,6 +13,12 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -P 3306 -uroot -proot || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
 
   app:
     image: dridi-khalil_student-management:latest
@@ -20,11 +26,16 @@ services:
     ports:
       - "8081:8081"
     environment:
+      # datasource (redondant avec application.properties mais OK)
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/studentdb
       SPRING_DATASOURCE_USERNAME: studentuser
       SPRING_DATASOURCE_PASSWORD: studentpass
+      # forcer le port côté Spring (assure la cohérence)
+      SERVER_PORT: "8081"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: on-failure
 
 volumes:
   mysql-data:
