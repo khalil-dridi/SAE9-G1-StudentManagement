@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "dridi-khalil_student-management:latest"
-        DOCKER_BUILDKIT = 1  // Active BuildKit
+        IMAGE_NAME = "student-management"
+        DOCKER_IMAGE = "${IMAGE_NAME}:latest"
+        DOCKER_BUILDKIT = "1"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'DridiKhalil_4SAE9_G1',
@@ -17,7 +17,7 @@ pipeline {
 
         stage('Build Maven') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn -B clean package -DskipTests'
             }
         }
 
@@ -34,23 +34,46 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'DOCKER_BUILDKIT=0 docker build -t $DOCKER_IMAGE .'
+                // active BuildKit via withEnv au lieu de préfixer la commande
+                withEnv(["DOCKER_BUILDKIT=1"]) {
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Push DockerHub') {
+            steps {
+                // utilise les credentials Jenkins (id: dockerhub-creds)
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                                  usernameVariable: 'DOCKER_USER',
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker tag ${DOCKER_IMAGE} $DOCKER_USER/${IMAGE_NAME}:${BUILD_NUMBER}
+                        docker tag ${DOCKER_IMAGE} $DOCKER_USER/${IMAGE_NAME}:latest
+                        docker push $DOCKER_USER/${IMAGE_NAME}:${BUILD_NUMBER}
+                        docker push $DOCKER_USER/${IMAGE_NAME}:latest
+                        docker logout
+                    '''
+                }
             }
         }
 
         stage('Deploy Docker Compose') {
             steps {
                 sh '''
-                echo "Stopping and removing existing containers..."
+                echo "Pulling images from registry (if docker-compose.yml references full image name)..."
+                docker-compose pull || true
+
+                echo "Stopping existing containers..."
                 docker rm -f spring-student || true
                 docker rm -f mysql-student || true
 
-                echo "Deploying Docker Compose..."
-                docker-compose up -d --build
+                echo "Starting containers via docker-compose..."
+                docker-compose up -d
                 '''
             }
         }
-
     }
 
     post {

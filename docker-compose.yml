@@ -13,7 +13,8 @@ services:
       - mysql-data:/var/lib/mysql
 
   app:
-    image: dridi-khalil_student-management:latest
+    # <-- changer ici pour récupérer l'image depuis DockerHub
+    image: khalildridi9/student-management:latest
     container_name: spring-student
     ports:
       - "8081:8081"
@@ -28,4 +29,3 @@ services:
 
 volumes:
   mysql-data:
-
