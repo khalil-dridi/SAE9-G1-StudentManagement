@@ -33,7 +33,7 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             environment {
-                SONAR_TOKEN = credentials('sonar-token')
+                SONAR_TOKEN = credentials('sonarqube-token')
             }
             steps {
                 sh "mvn sonar:sonar -Dsonar.projectKey=student-management -Dsonar.host.url=http://localhost:9000 -Dsonar.login=${SONAR_TOKEN}"
