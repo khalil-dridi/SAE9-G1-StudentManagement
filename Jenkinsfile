@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "dridi-khalil_student-management:latest"
+        DOCKER_BUILDKIT = 1  // Active BuildKit
     }
 
     stages {
@@ -33,14 +34,18 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${env.DOCKER_IMAGE} ."
+                // Utiliser sudo si l'utilisateur Jenkins n'a pas accès au socket Docker
+                sh 'docker build -t ${DOCKER_IMAGE} .'
+                // Si besoin : sh 'sudo docker build -t ${DOCKER_IMAGE} .'
             }
         }
 
         stage('Deploy Docker Compose') {
             steps {
-                sh "docker-compose down || true"
-                sh "docker-compose up -d --build"
+                // Toujours arrêter d'abord, puis lancer
+                sh 'docker-compose down || true'
+                sh 'docker-compose up -d --build'
+                // Si besoin : sh 'sudo docker-compose ...'
             }
         }
 
