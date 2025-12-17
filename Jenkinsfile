@@ -40,12 +40,16 @@ pipeline {
 
         stage('Deploy Docker Compose') {
             steps {
-                // Toujours arrêter d'abord, puis lancer
-                sh 'docker-compose down || true'
-                sh 'docker-compose up -d --build'
-                // Si besoin : sh 'sudo docker-compose ...'
+                sh '''
+                echo "Stopping and removing any existing mysql-student container..."
+                docker rm -f mysql-student || true
+
+                echo "Deploying Docker Compose..."
+                docker-compose up -d --build
+                '''
             }
         }
+
 
     }
 
