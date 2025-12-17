@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "student-management"
         DOCKER_IMAGE = "${IMAGE_NAME}:latest"
-        DOCKER_BUILDKIT = "1"
+
     }
 
     stages {
