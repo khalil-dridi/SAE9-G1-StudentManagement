@@ -34,9 +34,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                // Utiliser sudo si l'utilisateur Jenkins n'a pas accès au socket Docker
-                sh 'docker build -t ${DOCKER_IMAGE} .'
-                // Si besoin : sh 'sudo docker build -t ${DOCKER_IMAGE} .'
+                sh 'DOCKER_BUILDKIT=0 docker build -t dridi-khalil_student-management:latest .'
             }
         }
 
