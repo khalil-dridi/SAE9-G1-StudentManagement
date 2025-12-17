@@ -27,6 +27,22 @@ pipeline {
                 }
             }
         }
+        stage('Build Docker Image') {
+                    steps {
+                        echo "Création de l'image Docker..."
+                        sh "docker build -t ${DOCKER_IMAGE} ."
+                    }
+                }
+
+                stage('Deploy Docker Compose') {
+                    steps {
+                        echo "Déploiement avec Docker Compose..."
+                        // Arrêter tout au cas où
+                        sh "docker-compose down || true"
+                        // Lancer le stack
+                        sh "docker-compose up -d --build"
+                    }
+                }
 
     }
 }
