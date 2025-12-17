@@ -34,14 +34,15 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'DOCKER_BUILDKIT=0 docker build -t dridi-khalil_student-management:latest .'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
         stage('Deploy Docker Compose') {
             steps {
                 sh '''
-                echo "Stopping and removing any existing mysql-student container..."
+                echo "Stopping and removing existing containers..."
+                docker rm -f spring-student || true
                 docker rm -f mysql-student || true
 
                 echo "Deploying Docker Compose..."
@@ -49,7 +50,6 @@ pipeline {
                 '''
             }
         }
-
 
     }
 
