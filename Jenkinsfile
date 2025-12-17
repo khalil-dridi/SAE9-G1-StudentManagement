@@ -34,10 +34,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                // active BuildKit via withEnv au lieu de préfixer la commande
-                withEnv(["DOCKER_BUILDKIT=1"]) {
-                    sh "docker build -t ${DOCKER_IMAGE} ."
-                }
+                sh 'docker build -t ${DOCKER_IMAGE} .'
             }
         }
 
