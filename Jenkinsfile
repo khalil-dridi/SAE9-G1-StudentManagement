@@ -4,7 +4,6 @@ pipeline {
     environment {
         IMAGE_NAME = "student-management"
         DOCKER_IMAGE = "${IMAGE_NAME}:latest"
-
     }
 
     stages {
@@ -31,6 +30,7 @@ pipeline {
                 }
             }
         }
+
         stage('SonarQube Analysis') {
           environment {
             SONAR_TOKEN = credentials('sonarqube-token')
@@ -40,7 +40,6 @@ pipeline {
             sh 'mvn sonar:sonar -Dsonar.projectKey=student-management -Dsonar.host.url=http://localhost:9000 -Dsonar.token=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
           }
         }
-
 
         stage('Build Docker Image') {
             steps {
@@ -64,7 +63,6 @@ pipeline {
             }
         }
 
-
         stage('Deploy Docker Compose') {
             steps {
                 sh '''
@@ -80,6 +78,34 @@ pipeline {
                 '''
             }
         }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                // utilise dockerhub-creds pour récupérer DOCKER_USER (le compte qui a poussé l'image)
+                // NOTE: ce stage suppose que `kubectl` est installé et configuré sur l'agent Jenkins
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                                  usernameVariable: 'DOCKER_USER',
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                      echo "Applying k8s manifests (k8s/)..."
+                      kubectl apply -f k8s/ --recursive || true
+
+                      echo "Attempt to update deployment image (if deployment exists)..."
+                      kubectl -n devops set image deployment/student-app student-app=${DOCKER_USER}/${IMAGE_NAME}:latest --record || true
+
+                      echo "Waiting for rollout (student-app)..."
+                      kubectl -n devops rollout status deployment/student-app --timeout=120s || true
+
+                      echo "Pods status:"
+                      kubectl -n devops get pods -o wide
+
+                      echo "Service list:"
+                      kubectl -n devops get svc
+                    '''
+                }
+            }
+        }
+
     }
 
     post {
