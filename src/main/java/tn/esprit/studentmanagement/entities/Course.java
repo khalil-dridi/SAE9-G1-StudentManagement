@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class Course {
+    //classe course
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idCourse;
