@@ -32,13 +32,15 @@ pipeline {
             }
         }
         stage('SonarQube Analysis') {
-            environment {
-                SONAR_TOKEN = credentials('sonarqube-token')
-            }
-            steps {
-                sh "mvn sonar:sonar -Dsonar.projectKey=student-management -Dsonar.host.url=http://localhost:9000 -Dsonar.login=${SONAR_TOKEN}"
-            }
+          environment {
+            SONAR_TOKEN = credentials('sonarqube-token')
+          }
+          steps {
+            // utilisation de quotes simples pour éviter l'interpolation Groovy des secrets
+            sh 'mvn sonar:sonar -Dsonar.projectKey=student-management -Dsonar.host.url=http://localhost:9000 -Dsonar.token=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
+          }
         }
+
 
         stage('Build Docker Image') {
             steps {
